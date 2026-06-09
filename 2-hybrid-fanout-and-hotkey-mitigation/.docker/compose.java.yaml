@@ -1,0 +1,15 @@
+# Override: switch api build context to Java (1-java).
+# Uses alternate host ports (3011/5443/6391) to avoid conflicts with other lesson stacks.
+services:
+  api:
+    build:
+      context: ../1-java
+      dockerfile: Dockerfile
+    ports: !override
+      - "3011:3000"
+  db:
+    ports: !override
+      - "5443:5432"
+  redis:
+    ports: !override
+      - "6391:6379"

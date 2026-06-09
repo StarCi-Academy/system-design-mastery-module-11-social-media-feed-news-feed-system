@@ -1,0 +1,15 @@
+# Override: switch api build context to Go (3-go).
+# Uses alternate host ports (3013/5445/6393) to avoid conflicts with other lesson stacks.
+services:
+  api:
+    build:
+      context: ../3-go
+      dockerfile: Dockerfile
+    ports: !override
+      - "3013:3000"
+  db:
+    ports: !override
+      - "5445:5432"
+  redis:
+    ports: !override
+      - "6393:6379"

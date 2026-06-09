@@ -1,0 +1,69 @@
+# Docker stack for lesson: push vs pull models fanout.
+#
+# Demo: HTTP API on port 3000 — POST /api/feed/post, GET /api/feed/pull, GET /api/feed/push.
+#
+# Working directory: 0-push-vs-pull-models-fanout/.docker
+#
+# Start stack:
+#   docker compose up -d --build
+#
+# View logs:
+#   docker compose logs -f
+#
+# Cleanup:
+#   docker compose down -v
+#
+name: 0-push-vs-pull-models-fanout
+
+services:
+  # Feed HTTP API (Go reference build). All four language ports
+  # (0-typescript / 1-java / 2-csharp / 3-go) expose the same contract;
+  # switch the build context to run a different language.
+  api:
+    container_name: 0-push-vs-pull-models-fanout-api
+    build:
+      context: ../3-go
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=feed_service
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - 0-push-vs-pull-models-fanout-network
+    depends_on:
+      - db
+      - redis
+
+  # PostgreSQL persistence — follows / posts / pushed_timeline tables.
+  db:
+    image: postgres:16-alpine
+    container_name: 0-push-vs-pull-models-fanout-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=feed_service
+    ports:
+      - "5432:5432"
+    networks:
+      - 0-push-vs-pull-models-fanout-network
+
+  # Redis is part of the stack but reserved for later fanout experiments;
+  # the push/pull demo routes are Postgres-only.
+  redis:
+    image: redis:7-alpine
+    container_name: 0-push-vs-pull-models-fanout-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - 0-push-vs-pull-models-fanout-network
+
+networks:
+  0-push-vs-pull-models-fanout-network:
+    name: 0-push-vs-pull-models-fanout-network

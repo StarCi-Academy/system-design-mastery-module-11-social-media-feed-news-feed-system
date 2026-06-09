@@ -1,0 +1,68 @@
+# Docker stack for lesson: hybrid fanout and hotkey mitigation.
+#
+# Demo: HTTP API on port 3000 — GET /api/feed/hybrid and /api/feed/hybrid/route.
+#
+# Working directory: 2-hybrid-fanout-and-hotkey-mitigation/.docker
+#
+# Start stack:
+#   docker compose up -d --build
+#
+# View logs:
+#   docker compose logs -f
+#
+# Cleanup:
+#   docker compose down -v
+#
+name: 2-hybrid-fanout-and-hotkey-mitigation
+
+services:
+  # Hybrid feed HTTP API (Go reference build). All four language ports
+  # (0-typescript / 1-java / 2-csharp / 3-go) expose the same contract;
+  # switch the build context to run a different language.
+  api:
+    container_name: 2-hybrid-fanout-and-hotkey-mitigation-api
+    build:
+      context: ../3-go
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hybrid_feed_service
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - 2-hybrid-fanout-and-hotkey-mitigation-network
+    depends_on:
+      - db
+      - redis
+
+  # PostgreSQL persistence — authors (isCelebrity flag) and posts.
+  db:
+    image: postgres:16-alpine
+    container_name: 2-hybrid-fanout-and-hotkey-mitigation-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hybrid_feed_service
+    ports:
+      - "5432:5432"
+    networks:
+      - 2-hybrid-fanout-and-hotkey-mitigation-network
+
+  # Redis cache for salted hot feed keys.
+  redis:
+    image: redis:7-alpine
+    container_name: 2-hybrid-fanout-and-hotkey-mitigation-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - 2-hybrid-fanout-and-hotkey-mitigation-network
+
+networks:
+  2-hybrid-fanout-and-hotkey-mitigation-network:
+    name: 2-hybrid-fanout-and-hotkey-mitigation-network

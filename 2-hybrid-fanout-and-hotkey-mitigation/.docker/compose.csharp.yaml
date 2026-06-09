@@ -1,0 +1,15 @@
+# Override: switch api build context to C# (2-csharp).
+# Uses alternate host ports (3012/5444/6392) to avoid conflicts with other lesson stacks.
+services:
+  api:
+    build:
+      context: ../2-csharp
+      dockerfile: Dockerfile
+    ports: !override
+      - "3012:3000"
+  db:
+    ports: !override
+      - "5444:5432"
+  redis:
+    ports: !override
+      - "6392:6379"

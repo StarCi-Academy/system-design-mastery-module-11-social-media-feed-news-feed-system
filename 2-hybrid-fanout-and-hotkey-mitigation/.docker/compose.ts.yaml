@@ -1,0 +1,18 @@
+# Override: switch api build context to TypeScript (0-typescript).
+# Uses alternate host ports (3010/5442/6389) to avoid conflicts with other lesson stacks.
+services:
+  api:
+    build:
+      context: ../0-typescript
+      dockerfile: Dockerfile
+    ports: !override
+      - "3010:3000"
+  db:
+    ports: !override
+      - "5442:5432"
+    volumes:
+      # Schema authority for the TS port (TypeORM synchronize: false).
+      - ../0-typescript/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  redis:
+    ports: !override
+      - "6389:6379"

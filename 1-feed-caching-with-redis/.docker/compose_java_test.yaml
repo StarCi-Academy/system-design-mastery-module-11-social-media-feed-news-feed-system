@@ -1,0 +1,52 @@
+# E2E test compose for Java language track.
+# Start: docker compose -f compose_java_test.yaml up -d --build
+# Stop:  docker compose -f compose_java_test.yaml down -v
+
+name: 1-feed-caching-java-test
+
+services:
+  api:
+    container_name: 1-feed-caching-java-test-api
+    build:
+      context: ../1-java
+      dockerfile: Dockerfile
+    ports:
+      - "3541:3000"
+    environment:
+      - PORT=3000
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=feed_cache_service
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - 1-feed-caching-java-test-network
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:16-alpine
+    container_name: 1-feed-caching-java-test-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=feed_cache_service
+    ports:
+      - "5441:5432"
+    networks:
+      - 1-feed-caching-java-test-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: 1-feed-caching-java-test-redis
+    ports:
+      - "6381:6379"
+    networks:
+      - 1-feed-caching-java-test-network
+
+networks:
+  1-feed-caching-java-test-network:
+    name: 1-feed-caching-java-test-network

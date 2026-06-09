@@ -1,0 +1,57 @@
+# Alternate-port test compose — used when host ports 3000/5432/6379 are busy.
+# All services and networking identical to compose.yaml; only host-side ports differ.
+#
+# Start: docker compose -f compose_test.yaml up -d --build
+# Stop:  docker compose -f compose_test.yaml down -v
+
+name: 1-feed-caching-with-redis-test
+
+services:
+  api:
+    container_name: 1-feed-caching-with-redis-test-api
+    build:
+      context: ../0-typescript
+      dockerfile: Dockerfile
+    ports:
+      # Alternate host port 3539 to avoid collision.
+      - "3539:3000"
+    environment:
+      - PORT=3000
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=feed_cache_service
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - 1-feed-caching-with-redis-test-network
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:16-alpine
+    container_name: 1-feed-caching-with-redis-test-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=feed_cache_service
+    ports:
+      # Alternate host port 5439 to avoid collision.
+      - "5439:5432"
+    networks:
+      - 1-feed-caching-with-redis-test-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: 1-feed-caching-with-redis-test-redis
+    ports:
+      # Alternate host port 6389 to avoid collision.
+      - "6389:6379"
+    networks:
+      - 1-feed-caching-with-redis-test-network
+
+networks:
+  1-feed-caching-with-redis-test-network:
+    name: 1-feed-caching-with-redis-test-network

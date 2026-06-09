@@ -1,0 +1,52 @@
+# E2E test compose for C# language track.
+# Start: docker compose -f compose_csharp_test.yaml up -d --build
+# Stop:  docker compose -f compose_csharp_test.yaml down -v
+
+name: 1-feed-caching-csharp-test
+
+services:
+  api:
+    container_name: 1-feed-caching-csharp-test-api
+    build:
+      context: ../2-csharp
+      dockerfile: Dockerfile
+    ports:
+      - "3542:3000"
+    environment:
+      - PORT=3000
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=feed_cache_service
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - 1-feed-caching-csharp-test-network
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:16-alpine
+    container_name: 1-feed-caching-csharp-test-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=feed_cache_service
+    ports:
+      - "5442:5432"
+    networks:
+      - 1-feed-caching-csharp-test-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: 1-feed-caching-csharp-test-redis
+    ports:
+      - "6382:6379"
+    networks:
+      - 1-feed-caching-csharp-test-network
+
+networks:
+  1-feed-caching-csharp-test-network:
+    name: 1-feed-caching-csharp-test-network
